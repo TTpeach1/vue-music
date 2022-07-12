@@ -9,32 +9,19 @@
     </van-grid>
 
     <van-cell class="title" title="最佳匹配" />
-    <van-cell
-      :label="`${
-        (item.song &&
-          item.song.artists &&
-          item.song.artists[0] &&
-          item.song.artists[0].name) ||
-        '未知歌手'
-      }-${item.name}`"
-      :title="item.name"
-      center
-      v-for="item in Newsong"
-      :key="item.id"
-    >
-      <template>
-        <van-icon color="#000" name="play-circle-o" size="28" />
-      </template>
-    </van-cell>
+    <SongItem v-for="item in Newsong" :key="item.id" :name='item.name' :author='item.song.artists[0].name' :id='item.id'></SongItem>
   </div>
 </template>
 
 <script>
 import { getRecommendListApi } from '@/apis';
 import { getNewsongListApi } from '@/apis';
+import SongItem from '@/components/SongItem';
 export default {
   name: 'VueMusicIndex',
-
+  components: {
+    SongItem,
+  },
   data() {
     return {
       list: [],

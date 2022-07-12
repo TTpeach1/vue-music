@@ -1,8 +1,12 @@
 <template>
   <div>
-    <van-search v-model="value" placeholder="请输入搜索关键词" />
+    <van-search
+      v-model="value"
+      placeholder="请输入搜索关键词"
+      @input="inputFn"
+    />
     <!-- 热门搜索 -->
-    <template v-if="this.value==''">
+    <template v-if="this.value == ''">
       <van-cell title="热门搜索" />
       <div style="padding: 10px 16px">
         <van-tag
@@ -28,30 +32,37 @@
         finished-text="没有更多了"
         @load="onLoad"
       >
-        <van-cell
-          v-for="item in Search"
-          :key="item.id"
-          :title="item.name"
-          :label="`${item.ar[0].name || '未知歌手'}-${item.name}`"
-        />
+        <SongItem
+          v-for="(item,index) in Search"
+          :key="index"
+          :name="item.name"
+          :author="item.ar[0].name"
+          :id='item.id'
+        ></SongItem>
       </van-list>
     </template>
   </div>
 </template>
 
 <script>
-import { getSearchTagApi } from '@/apis';
-import { getSearchListApi } from '@/apis';
+import { getSearchTagApi,getSearchListApi } from '@/apis';
+// import { getSearchListApi } from '@/apis';
+import SongItem from '@/components/SongItem';
 export default {
   name: 'VueMusicIndex',
-
+  components: {
+    SongItem,
+  },
   data() {
     return {
       value: '',
       Tag: [],
       Search: [],
-      loading: '',
-      finished: true,
+      loading: false,
+      finished: false,
+      page: 1,
+      limit: 20,
+      timer: null,
     };
   },
   created() {
@@ -70,21 +81,50 @@ export default {
         console.log('热门搜索获取失败');
       }
     },
-    async clickFn(val) {
-      this.value = val;
+    async getListFn() {
       try {
         const res = await getSearchListApi({
           keywords: this.value,
+          limit: this.limit,
+          offset: (this.page - 1) * this.limit,
         });
         console.log(res);
-        this.Search = res.data.result.songs;
+        return res.data.result.songs || [];
       } catch (e) {
         console.log('搜索获取失败');
+        return [];
       }
     },
-    onLoad() {},
+    async clickFn(val) {
+      (this.page = 1), (this.finished = false), (this.value = val);
+      this.Search = await this.getListFn();
+    },
+    async onLoad() {
+      this.page++;
+      const res = await this.getListFn();
+      if (res.length == 0) {
+        this.finished = true;
+        this.loading = false;
+        return;
+      }
+      this.Search = [...this.Search, ...res];
+      this.loading = false;
+    },
+    inputFn() {
+      if (this.timer) {
+        clearTimeout(this.timer);
+      }
+      this.timer = setTimeout(async () => {
+        (this.page = 1), (this.finished = false);
+        if (!this.value.trim()) {
+          this.Search = [];
+          return;
+        }
+        this.Search = await this.getListFn();
+      }, 1000);
+    },
   },
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="less" scoped></style>

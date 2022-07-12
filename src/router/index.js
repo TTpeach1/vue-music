@@ -5,6 +5,7 @@ import Layout from '@/views/Layout'
 //引入二级路由组件 
 import Home from '@/views/Home'
 import Search from '@/views/Search'
+import Play from '@/views/Play'
 //注册
 Vue.use(VueRouter)
 //设置规则
@@ -34,6 +35,10 @@ const routes = [
                 }
             },
         ]
+    },
+    {
+        path: '/play',
+        component: Play,
     }
 ]
 //设置路由对象
